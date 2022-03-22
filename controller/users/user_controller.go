@@ -40,3 +40,18 @@ func GetUsers(c echo.Context) (err error) {
 	c.JSON(http.StatusOK, users)
 	return
 }
+
+func GetUser(c echo.Context) (err error) {
+
+	user_id := c.Param("user_id")
+
+	users, getErr := user_service.GetUserById(user_id)
+
+	if getErr != nil {
+		c.JSON(http.StatusInternalServerError, getErr)
+		return
+	}
+
+	c.JSON(http.StatusOK, users)
+	return
+}

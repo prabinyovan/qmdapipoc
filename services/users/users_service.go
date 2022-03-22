@@ -75,3 +75,23 @@ func GetUserCollection() ([]contracts.UserOutContract, *errors.CustomError) {
 
 	return out_contracts, nil
 }
+
+func GetUserById(user_global_key string) (contracts.UserOutContract, *errors.CustomError) {
+
+	var out_contract contracts.UserOutContract
+
+	user, collection_error := users.GetUser(user_global_key)
+
+	if collection_error != nil {
+		return out_contract, collection_error
+	}
+
+	result := contracts.UserOutContract{
+		UserId:    user.UserGlobalKey,
+		FirstName: user.FirstName,
+		LastName:  user.LastName,
+		Email:     user.Email,
+	}
+
+	return result, nil
+}

@@ -39,12 +39,6 @@ func Login(c echo.Context) (err error) {
 	}
 
 	// Set custom claims
-	// claims := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.StandardClaims{
-	// 	Issuer:    strconv.Itoa(int(result.ID)),
-	// 	ExpiresAt: time.Now().Add(time.Hour * 72).Unix(),
-	// })
-
-	// Set custom claims
 	claims := &jwtCustomClaims{
 		result.UserGlobalKey,
 		jwt.StandardClaims{
@@ -56,16 +50,16 @@ func Login(c echo.Context) (err error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 
 	// Generate encoded token and send it as response.
-	t, err := token.SignedString([]byte("secret"))
+	jwtToken, err := token.SignedString([]byte(SecretKey))
 
 	if err != nil {
 		return err
 	}
 
 	auth_out_contract := contracts.AuthOutContract{
-		Token:     t,
-		FirstName: user.FirstName,
-		LastName:  user.LastName,
+		JwtAccessToken: jwtToken,
+		FirstName:      result.FirstName,
+		LastName:       result.LastName,
 	}
 
 	c.JSON(http.StatusOK, auth_out_contract)

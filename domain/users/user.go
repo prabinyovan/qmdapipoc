@@ -2,7 +2,7 @@ package users
 
 import (
 	"log"
-	users_storage "qmdapipoc/storages/users"
+	storage "qmdapipoc/storages"
 	"qmdapipoc/utils/errors"
 	"strings"
 )
@@ -19,6 +19,7 @@ type User struct {
 var (
 	createUserQuery        = `INSERT INTO "User"."Users"(first_name, last_name, email, password) VALUES($1, $2, $3, $4);`
 	getUserByEmailQuery    = `SELECT 1 user_id, user_global_key, first_name, last_name, email, password FROM "User"."Users" WHERE email = $1;`
+	getUserByIdQuery       = `SELECT 1 user_id, user_global_key, first_name, last_name, email, password FROM "User"."Users" WHERE user_global_key = $1;`
 	getUserCollectionQuery = `SELECT user_id, user_global_key, first_name, last_name, email, password FROM "User"."Users"`
 )
 
@@ -52,7 +53,7 @@ func (user *User) Save() *errors.CustomError {
 
 	log.Println(createUserQuery)
 
-	stmt, err := users_storage.Client.Prepare(createUserQuery)
+	stmt, err := storage.Client.Prepare(createUserQuery)
 
 	if err != nil {
 		log.Println(err.Error())
@@ -79,7 +80,7 @@ func (user *User) Save() *errors.CustomError {
 }
 
 func (user *User) GetByEmail() *errors.CustomError {
-	stmt, err := users_storage.Client.Prepare(getUserByEmailQuery)
+	stmt, err := storage.Client.Prepare(getUserByEmailQuery)
 
 	if err != nil {
 		log.Println(err.Error())
@@ -104,7 +105,7 @@ func GetUserCollection() ([]User, *errors.CustomError) {
 
 	user_collection := make([]User, 0)
 
-	user_collection_result, err := users_storage.Client.Query(getUserCollectionQuery)
+	user_collection_result, err := storage.Client.Query(getUserCollectionQuery)
 
 	if err != nil {
 		log.Fatal(err)
@@ -126,4 +127,25 @@ func GetUserCollection() ([]User, *errors.CustomError) {
 	}
 
 	return user_collection, nil
+}
+
+func GetUser(user_global_key string) (User, *errors.CustomError) {
+
+	user := User{}
+
+	user_result, err := storage.Client.Prepare(getUserByIdQuery)
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	defer user_result.Close()
+
+	result := user_result.QueryRow(user_global_key)
+
+	if getErr := result.Scan(&user.ID, &user.UserGlobalKey, &user.FirstName, &user.LastName, &user.Email, &user.Password); getErr != nil {
+		return user, errors.NewCustomError("UserNotFound", "0001", getErr.Error())
+	}
+
+	return user, nil
 }

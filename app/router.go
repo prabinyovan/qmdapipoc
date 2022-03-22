@@ -29,16 +29,16 @@ func mapUrls() {
 	auth_group := router.Group("/api/v1/auth")
 	auth_group.POST("/login", auth.Login)
 
-	user_group := router.Group("/api/v1/users")
-
 	//Configure middleware with the custom claims type
 	config := middleware.JWTConfig{
 		Claims:     &jwtCustomClaims{},
-		SigningKey: []byte("secret"),
+		SigningKey: []byte(SecretKey),
 	}
 
+	user_group := router.Group("/api/v1/users")
 	user_group.Use(middleware.JWTWithConfig(config))
 
 	user_group.POST("", users.Register)
 	user_group.GET("", users.GetUsers)
+	user_group.GET("/:user_id", users.GetUser)
 }
